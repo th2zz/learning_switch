@@ -2,6 +2,69 @@ from switchyard.lib.userlib import *
 import time
 
 
+
+class LRUCache:
+    def _reconnect(self, node):
+        node.next.prev=node.prev
+        node.prev.nect=node.next
+
+    def _insert(self, node):
+        node.next=self.tail
+        node.next.prev=node
+        node.prev=self.head
+        node.prev.next=node
+
+    def __init__(self, size):
+        self.size=size
+        self.key2node=dict()
+        self.head=Node(-1, -1)
+        self.tail = Node(-1, -1)
+        self.head.next=self.tail
+        self.tail.prev=self.head
+        self.val2key=dict()
+        self.capacity = size
+
+    def getPort(self,key):
+        if key not in self.key2node.keys():
+            return None #changed
+        node=self.key2node[key]
+        self._reconnect(node)
+        self._insert(node)
+        return str(node.val)
+
+    def putItem(self, key, value):
+        node=Node
+        if value in self.val2key.keys():
+            old=self.val2key[value]
+            del self.val2key[value]
+            node =self.key2node[old_key]
+            del self.key2node[old_key]
+            self._reconnect(ndoe)
+            self.val2key[value]=key
+
+        if key not in self.key2node.keys():
+            if len(self.key2node) == self.capacity:
+                # be careful about the order of (1) & (2)
+                del self.key2node[self.tail.prev.key]  # (1)
+                self._reconnect(self.tail.prev)  # (2)
+            node = Node(key, value)
+            self.key2node[key] = node
+
+
+        else:
+              node = self.key2node[key]
+              node.val = value
+              self._reconnect(node)
+        self._insert(node)
+
+class Node:
+        def __init__(self,key,val):
+            self.prev = None
+            self.next = None
+            self.key=key
+            self.val=val
+
+
 def main(net):
     my_interfaces = net.interfaces()
     mymacs = [intf.ethaddr for intf in my_interfaces]
@@ -29,7 +92,6 @@ def main(net):
         else:
             if(input_port != forwarding_table.get(header.src)):#incoming port info becomes different, update
                 forwarding_table[header.src] = input_port
-
         dest_port = forwarding_table.get(header.dst)
         if header.dst in mymacs:#dest is my switch
             log_debug("Packet intended for me")
